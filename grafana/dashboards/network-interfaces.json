@@ -1,0 +1,185 @@
+{
+  "title": "Network / Interfaces (SNMP)",
+  "uid": "net-interfaces",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "1m",
+  "tags": ["network", "snmp"],
+  "templating": {
+    "list": [
+      {
+        "name": "device",
+        "label": "Device",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(up{job=\"snmp-network-devices\"}, instance)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Devices Up",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(up{job=\"snmp-network-devices\"} == 1) OR vector(0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Devices Down",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(up{job=\"snmp-network-devices\"} == 0) OR vector(0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Interfaces Oper Down (admin up)",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(ifOperStatus{instance=~\"$device\"} == 2 and ifAdminStatus == 1) OR vector(0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Inbound Traffic",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifHCInOctets{instance=~\"$device\"}[5m]) * 8",
+          "legendFormat": "{{instance}} {{ifDescr}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bps", "custom": { "fillOpacity": 10 } },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Outbound Traffic",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifHCOutOctets{instance=~\"$device\"}[5m]) * 8",
+          "legendFormat": "{{instance}} {{ifDescr}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bps", "custom": { "fillOpacity": 10 } },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Interface Errors (in/out)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifInErrors{instance=~\"$device\"}[5m])",
+          "legendFormat": "in: {{instance}} {{ifDescr}}"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(ifOutErrors{instance=~\"$device\"}[5m])",
+          "legendFormat": "out: {{instance}} {{ifDescr}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "pps", "custom": { "fillOpacity": 10 } },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Interface Discards (in/out)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(ifInDiscards{instance=~\"$device\"}[5m])",
+          "legendFormat": "in: {{instance}} {{ifDescr}}"
+        },
+        {
+          "refId": "B",
+          "expr": "rate(ifOutDiscards{instance=~\"$device\"}[5m])",
+          "legendFormat": "out: {{instance}} {{ifDescr}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "pps", "custom": { "fillOpacity": 10 } },
+        "overrides": []
+      }
+    }
+  ]
+}

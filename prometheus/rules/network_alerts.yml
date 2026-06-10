@@ -1,0 +1,50 @@
+---
+groups:
+  - name: network-devices
+    rules:
+      - alert: DeviceUnreachable
+        expr: up{job="snmp-network-devices"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} is not responding to SNMP"
+          description: >-
+            SNMP polling of {{ $labels.instance }} has been failing for
+            more than 5 minutes. The device may be down or unreachable.
+
+      - alert: InterfaceDown
+        expr: ifOperStatus{job="snmp-network-devices"} == 2 and ifAdminStatus == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: interface {{ $labels.ifDescr }} is down"
+          description: >-
+            Interface {{ $labels.ifDescr }} on {{ $labels.instance }} is
+            administratively up but operationally down for 5 minutes.
+
+      - alert: InterfaceHighUtilization
+        expr: >-
+          (rate(ifHCInOctets{job="snmp-network-devices"}[5m]) * 8
+            / on (instance, ifIndex) (ifHighSpeed * 1e6 > 0)) > 0.90
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: {{ $labels.ifDescr }} above 90% inbound"
+          description: >-
+            Inbound utilization on {{ $labels.ifDescr }} of
+            {{ $labels.instance }} has exceeded 90% of link speed
+            for 15 minutes.
+
+      - alert: InterfaceErrorsIncreasing
+        expr: rate(ifInErrors{job="snmp-network-devices"}[5m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: input errors on {{ $labels.ifDescr }}"
+          description: >-
+            {{ $labels.ifDescr }} on {{ $labels.instance }} is logging more
+            than 10 input errors/second — check optics, cabling and duplex.
