@@ -1,0 +1,39 @@
+!
+hostname ceos1
+!
+username admin privilege 15 role network-admin secret admin
+!
+management ssh
+   no shutdown
+!
+management api http-commands
+   no shutdown
+   no protocol https
+   protocol http
+!
+snmp-server chassis-id ceos1
+snmp-server contact lab@example.com
+snmp-server location Docker Lab
+snmp-server view _all_ 1 included
+snmp-server community public ro
+!
+ip routing
+!
+interface Management0
+   ip address 172.20.0.10/24
+!
+interface Ethernet1
+   description peer-ceos2
+   no switchport
+   no shutdown
+   ip address 10.0.0.2/29
+!
+ip route 0.0.0.0/0 172.20.0.1
+!
+router bgp 65001
+   router-id 1.1.1.1
+   neighbor 10.0.0.3 remote-as 65002
+   neighbor 10.0.0.3 description ceos2
+   network 10.0.0.0/29
+!
+end

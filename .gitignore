@@ -5,3 +5,10 @@
 .vscode/
 .idea/
 .DS_Store
+
+# cEOS runtime-generated files (auto-criados pelo EOS ao iniciar)
+ceos/ceos-config
+ceos/iptables
+
+# Dados do snmp-simulator (removido do stack)
+snmp/sim/

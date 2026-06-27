@@ -48,3 +48,113 @@ groups:
           description: >-
             {{ $labels.ifDescr }} on {{ $labels.instance }} is logging more
             than 10 input errors/second — check optics, cabling and duplex.
+
+  # ---------------------------------------------------------------------------
+  - name: bgp
+    rules:
+      - alert: BGPSessionDown
+        expr: bgpPeerState{job="snmp-bgp"} != 6
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }}: BGP session to {{ $labels.bgpPeerRemoteAddr }} is down"
+          description: >-
+            BGP peer {{ $labels.bgpPeerRemoteAddr }} on {{ $labels.instance }}
+            is not in Established state (current state={{ $value }}).
+            1=idle 2=connect 3=active 4=opensent 5=openconfirm 6=established.
+
+      - alert: BGPSessionFlapping
+        expr: increase(bgpPeerFsmEstablishedTransitions{job="snmp-bgp"}[15m]) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: BGP session to {{ $labels.bgpPeerRemoteAddr }} is flapping"
+          description: >-
+            BGP session with {{ $labels.bgpPeerRemoteAddr }} on {{ $labels.instance }}
+            has reset {{ $value | printf "%.0f" }} times in the last 15 minutes.
+            Check route policies, hold timers and underlying connectivity.
+
+  # ---------------------------------------------------------------------------
+  - name: ospf
+    rules:
+      - alert: OSPFNeighborNotFull
+        expr: ospfNbrState{job="snmp-ospf"} != 8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: OSPF neighbor {{ $labels.ospfNbrIpAddr }} not Full"
+          description: >-
+            OSPF neighbor {{ $labels.ospfNbrIpAddr }} (router-id {{ $labels.ospfNbrRtrId }})
+            on {{ $labels.instance }} has been in a non-Full state for 5 minutes
+            (current state={{ $value }}).
+            1=down 2=attempt 3=init 4=twoWay 5=exchangeStart 6=exchange 7=loading 8=full.
+
+      - alert: OSPFNeighborFlapping
+        expr: increase(ospfNbrEvents{job="snmp-ospf"}[15m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: OSPF adjacency to {{ $labels.ospfNbrIpAddr }} is unstable"
+          description: >-
+            OSPF adjacency with {{ $labels.ospfNbrIpAddr }} on {{ $labels.instance }}
+            changed state {{ $value | printf "%.0f" }} times in 15 minutes.
+            Check hello/dead timers, MTU mismatch and link stability.
+
+  # ---------------------------------------------------------------------------
+  - name: cisco-resources
+    rules:
+      - alert: CiscoCPUHigh
+        expr: cpmCPUTotal5minRev{job="snmp-cisco-cpu"} > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: CPU utilization above 80% (CPU {{ $labels.cpmCPUTotalIndex }})"
+          description: >-
+            CPU {{ $labels.cpmCPUTotalIndex }} on {{ $labels.instance }} has been
+            above 80% for 10 minutes (current={{ $value }}%).
+            Check for routing table churn, high ACL/NAT/QoS load or active DoS.
+
+      - alert: CiscoCPUCritical
+        expr: cpmCPUTotal5minRev{job="snmp-cisco-cpu"} > 95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }}: CPU critically high at {{ $value }}%"
+          description: >-
+            CPU {{ $labels.cpmCPUTotalIndex }} on {{ $labels.instance }} has been
+            above 95% for 5 minutes — control-plane stability may be at risk.
+
+      - alert: CiscoMemoryHigh
+        expr: >-
+          ciscoMemoryPoolUsed{job="snmp-cisco-memory"}
+            / (ciscoMemoryPoolUsed{job="snmp-cisco-memory"}
+               + ciscoMemoryPoolFree{job="snmp-cisco-memory"}) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.instance }}: memory pool {{ $labels.ciscoMemoryPoolName }} above 85%"
+          description: >-
+            Memory pool {{ $labels.ciscoMemoryPoolName }} on {{ $labels.instance }}
+            is {{ $value | humanizePercentage }} utilized for 10 minutes.
+            Check for memory leaks or unexpectedly large routing/FIB tables.
+
+      - alert: CiscoMemoryCritical
+        expr: >-
+          ciscoMemoryPoolUsed{job="snmp-cisco-memory"}
+            / (ciscoMemoryPoolUsed{job="snmp-cisco-memory"}
+               + ciscoMemoryPoolFree{job="snmp-cisco-memory"}) > 0.95
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }}: memory pool {{ $labels.ciscoMemoryPoolName }} critically high"
+          description: >-
+            Memory pool {{ $labels.ciscoMemoryPoolName }} on {{ $labels.instance }}
+            has exceeded 95% for 5 minutes — risk of process crashes or OOM reload.

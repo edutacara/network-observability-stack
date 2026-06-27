@@ -18,19 +18,52 @@ scrape_configs:
       - targets:
           - localhost:9090
 
-  # SNMP polling of network devices via snmp-exporter.
-  # Each target below is a network device; the exporter does the SNMP
-  # walk on Prometheus' behalf (the classic relabel_configs dance).
+  # SNMP polling via snmp-exporter (IF-MIB: traffic, errors, oper status)
   - job_name: snmp-network-devices
     metrics_path: /snmp
     params:
-      auth: [public_v2]   # SNMP community defined in the exporter's snmp.yml
-      module: [if_mib]    # interface metrics (ifTable / ifXTable)
+      auth: [public_v2]
+      module: [if_mib]
     static_configs:
       - targets:
-          - 192.0.2.11    # rtr-core-01 (replace with your devices)
-          - 192.0.2.12    # rtr-core-02
-          - 192.0.2.31    # mx-edge-01
+          - ceos1
+          - ceos2
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116
+
+  # BGP4-MIB — peer FSM state and message counters (RFC 4273)
+  - job_name: snmp-bgp
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [bgp4_mib]
+    static_configs:
+      - targets:
+          - ceos1
+          - ceos2
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116
+
+  # OSPF-MIB — neighbor adjacency states (RFC 1850)
+  - job_name: snmp-ospf
+    metrics_path: /snmp
+    params:
+      auth: [public_v2]
+      module: [ospf_mib]
+    static_configs:
+      - targets:
+          - ceos1
+          - ceos2
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target

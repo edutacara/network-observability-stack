@@ -13,13 +13,85 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
+    networks:
+      - monitoring
+
+  ceos1:
+    image: ceos:4.36.1F
+    container_name: ceos1
+    privileged: true
+    ports:
+      - "2222:22"
+    environment:
+      CEOS: "1"
+      EOS_PLATFORM: ceoslab
+      container: docker
+      INTFTYPE: eth
+      ETBA: "1"
+      SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT: "1"
+      MGMT_INTF: eth0
+    volumes:
+      - ./ceos/startup-config:/mnt/flash/startup-config:ro
+      - ./ceos/entrypoint.sh:/ceos-entrypoint.sh:ro
+    command:
+      - /bin/bash
+      - /ceos-entrypoint.sh
+      - systemd.setenv=INTFTYPE=eth
+      - systemd.setenv=ETBA=1
+      - systemd.setenv=SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT=1
+      - systemd.setenv=CEOS=1
+      - systemd.setenv=EOS_PLATFORM=ceoslab
+      - systemd.setenv=container=docker
+      - systemd.setenv=MGMT_INTF=eth0
+    networks:
+      monitoring:
+        ipv4_address: 172.20.0.10
+      peering:
+        ipv4_address: 10.0.0.2
+
+  ceos2:
+    image: ceos:4.36.1F
+    container_name: ceos2
+    privileged: true
+    ports:
+      - "2223:22"
+    environment:
+      CEOS: "1"
+      EOS_PLATFORM: ceoslab
+      container: docker
+      INTFTYPE: eth
+      ETBA: "1"
+      SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT: "1"
+      MGMT_INTF: eth0
+    volumes:
+      - ./ceos/startup-config-ceos2:/mnt/flash/startup-config:ro
+      - ./ceos/entrypoint.sh:/ceos-entrypoint.sh:ro
+    command:
+      - /bin/bash
+      - /ceos-entrypoint.sh
+      - systemd.setenv=INTFTYPE=eth
+      - systemd.setenv=ETBA=1
+      - systemd.setenv=SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT=1
+      - systemd.setenv=CEOS=1
+      - systemd.setenv=EOS_PLATFORM=ceoslab
+      - systemd.setenv=container=docker
+      - systemd.setenv=MGMT_INTF=eth0
+    networks:
+      monitoring:
+        ipv4_address: 172.20.0.20
+      peering:
+        ipv4_address: 10.0.0.3
 
   snmp-exporter:
     image: prom/snmp-exporter:v0.26.0
     container_name: snmp-exporter
     restart: unless-stopped
+    volumes:
+      - ./snmp/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
     ports:
       - "9116:9116"
+    networks:
+      - monitoring
 
   alertmanager:
     image: prom/alertmanager:v0.27.0
@@ -29,6 +101,8 @@ services:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     ports:
       - "9093:9093"
+    networks:
+      - monitoring
 
   grafana:
     image: grafana/grafana:11.1.0
@@ -46,6 +120,20 @@ services:
       - "3000:3000"
     depends_on:
       - prometheus
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+  peering:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/29
 
 volumes:
   prometheus-data:

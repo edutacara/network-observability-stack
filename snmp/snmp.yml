@@ -1,0 +1,414 @@
+---
+# Custom snmp.yml for network-observability-stack.
+# Modules: if_mib, bgp4_mib, ospf_mib, cisco_process_mib, cisco_memory_pool_mib
+#
+# For Juniper CPU/memory use jnxOperating MIB (1.3.6.1.4.1.2636.3.1.13) instead
+# of cisco_process_mib / cisco_memory_pool_mib.
+
+auths:
+  public_v2:
+    community: public
+    version: 2
+
+modules:
+
+  # ---------------------------------------------------------------------------
+  # Standard Interface MIB (IF-MIB + ifXTable)
+  # ---------------------------------------------------------------------------
+  if_mib:
+    walk:
+      - 1.3.6.1.2.1.2.2          # ifTable
+      - 1.3.6.1.2.1.31.1.1       # ifXTable
+    metrics:
+      - name: ifAdminStatus
+        oid: 1.3.6.1.2.1.2.2.1.7
+        type: gauge
+        help: "Desired state of the interface (1=up, 2=down, 3=testing)"
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifOperStatus
+        oid: 1.3.6.1.2.1.2.2.1.8
+        type: gauge
+        help: "Current operational state (1=up, 2=down, 3=testing, 4=unknown, 5=dormant, 6=notPresent, 7=lowerLayerDown)"
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifSpeed
+        oid: 1.3.6.1.2.1.2.2.1.5
+        type: gauge
+        help: Interface bandwidth estimate in bits/s (32-bit; use ifHighSpeed for >1 Gbps)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifInOctets
+        oid: 1.3.6.1.2.1.2.2.1.10
+        type: counter
+        help: Total octets received on the interface (32-bit)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifInErrors
+        oid: 1.3.6.1.2.1.2.2.1.14
+        type: counter
+        help: Inbound packets containing errors
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifInDiscards
+        oid: 1.3.6.1.2.1.2.2.1.13
+        type: counter
+        help: Inbound packets discarded despite no errors
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifOutOctets
+        oid: 1.3.6.1.2.1.2.2.1.16
+        type: counter
+        help: Total octets transmitted out of the interface (32-bit)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifOutErrors
+        oid: 1.3.6.1.2.1.2.2.1.20
+        type: counter
+        help: Outbound packets with errors
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      - name: ifOutDiscards
+        oid: 1.3.6.1.2.1.2.2.1.19
+        type: counter
+        help: Outbound packets discarded despite no errors
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+
+      # ifXTable — 64-bit counters + ifName/ifAlias labels
+      - name: ifHCInOctets
+        oid: 1.3.6.1.2.1.31.1.1.1.6
+        type: counter
+        help: Total octets received (64-bit)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifName
+            oid: 1.3.6.1.2.1.31.1.1.1.1
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifAlias
+            oid: 1.3.6.1.2.1.31.1.1.1.18
+            type: DisplayString
+
+      - name: ifHCOutOctets
+        oid: 1.3.6.1.2.1.31.1.1.1.10
+        type: counter
+        help: Total octets transmitted (64-bit)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifName
+            oid: 1.3.6.1.2.1.31.1.1.1.1
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifAlias
+            oid: 1.3.6.1.2.1.31.1.1.1.18
+            type: DisplayString
+
+      - name: ifHighSpeed
+        oid: 1.3.6.1.2.1.31.1.1.1.15
+        type: gauge
+        help: Interface bandwidth in Mbps (use for interfaces > 1 Gbps)
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+        lookups:
+          - labels: [ifIndex]
+            labelname: ifDescr
+            oid: 1.3.6.1.2.1.2.2.1.2
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifName
+            oid: 1.3.6.1.2.1.31.1.1.1.1
+            type: DisplayString
+          - labels: [ifIndex]
+            labelname: ifAlias
+            oid: 1.3.6.1.2.1.31.1.1.1.18
+            type: DisplayString
+
+  # ---------------------------------------------------------------------------
+  # BGP4-MIB (RFC 4273) — peer FSM state and message counters
+  # Index: bgpPeerRemoteAddr (4-byte IPv4 encoded in OID)
+  # ---------------------------------------------------------------------------
+  bgp4_mib:
+    walk:
+      - 1.3.6.1.2.1.15.3         # bgpPeerTable
+    metrics:
+      - name: bgpPeerState
+        oid: 1.3.6.1.2.1.15.3.1.2
+        type: gauge
+        help: "BGP peer FSM state (1=idle, 2=connect, 3=active, 4=opensent, 5=openconfirm, 6=established)"
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerAdminStatus
+        oid: 1.3.6.1.2.1.15.3.1.3
+        type: gauge
+        help: "BGP peer admin status (1=stop, 2=start)"
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerRemoteAs
+        oid: 1.3.6.1.2.1.15.3.1.9
+        type: gauge
+        help: Remote autonomous system number
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerInUpdates
+        oid: 1.3.6.1.2.1.15.3.1.10
+        type: counter
+        help: BGP UPDATE messages received from this peer
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerOutUpdates
+        oid: 1.3.6.1.2.1.15.3.1.11
+        type: counter
+        help: BGP UPDATE messages transmitted to this peer
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerInTotalMessages
+        oid: 1.3.6.1.2.1.15.3.1.12
+        type: counter
+        help: Total BGP messages received from this peer
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerOutTotalMessages
+        oid: 1.3.6.1.2.1.15.3.1.13
+        type: counter
+        help: Total BGP messages transmitted to this peer
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerFsmEstablishedTime
+        oid: 1.3.6.1.2.1.15.3.1.16
+        type: gauge
+        help: Seconds since peer entered Established state (or since last Established)
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+      - name: bgpPeerFsmEstablishedTransitions
+        oid: 1.3.6.1.2.1.15.3.1.15
+        type: counter
+        help: Total transitions into Established state (rising fast = session flapping)
+        indexes:
+          - labelname: bgpPeerRemoteAddr
+            type: InetAddressIPv4
+
+  # ---------------------------------------------------------------------------
+  # OSPF-MIB (RFC 1850) — neighbor adjacency states and event counters
+  # Index: ospfNbrIpAddr (IPv4) + ospfNbrAddressLessIndex (gauge)
+  # ---------------------------------------------------------------------------
+  ospf_mib:
+    walk:
+      - 1.3.6.1.2.1.14.10        # ospfNbrTable
+    metrics:
+      - name: ospfNbrState
+        oid: 1.3.6.1.2.1.14.10.1.6
+        type: gauge
+        help: "OSPF neighbor state (1=down, 2=attempt, 3=init, 4=twoWay, 5=exchangeStart, 6=exchange, 7=loading, 8=full)"
+        indexes:
+          - labelname: ospfNbrIpAddr
+            type: InetAddressIPv4
+          - labelname: ospfNbrAddressLessIndex
+            type: gauge
+        lookups:
+          - labels: [ospfNbrIpAddr, ospfNbrAddressLessIndex]
+            labelname: ospfNbrRtrId
+            oid: 1.3.6.1.2.1.14.10.1.3
+            type: InetAddressIPv4
+
+      - name: ospfNbrEvents
+        oid: 1.3.6.1.2.1.14.10.1.7
+        type: counter
+        help: Number of times this neighbor changed state (rising = unstable adjacency)
+        indexes:
+          - labelname: ospfNbrIpAddr
+            type: InetAddressIPv4
+          - labelname: ospfNbrAddressLessIndex
+            type: gauge
+        lookups:
+          - labels: [ospfNbrIpAddr, ospfNbrAddressLessIndex]
+            labelname: ospfNbrRtrId
+            oid: 1.3.6.1.2.1.14.10.1.3
+            type: InetAddressIPv4
+
+      - name: ospfNbrLsRetransQLen
+        oid: 1.3.6.1.2.1.14.10.1.8
+        type: gauge
+        help: Current length of LS retransmission queue (should be 0 in steady state)
+        indexes:
+          - labelname: ospfNbrIpAddr
+            type: InetAddressIPv4
+          - labelname: ospfNbrAddressLessIndex
+            type: gauge
+        lookups:
+          - labels: [ospfNbrIpAddr, ospfNbrAddressLessIndex]
+            labelname: ospfNbrRtrId
+            oid: 1.3.6.1.2.1.14.10.1.3
+            type: InetAddressIPv4
+
+  # ---------------------------------------------------------------------------
+  # CISCO-PROCESS-MIB — CPU utilization (Cisco IOS / IOS-XE / NX-OS)
+  # For Juniper use jnxOperating MIB: 1.3.6.1.4.1.2636.3.1.13
+  # ---------------------------------------------------------------------------
+  cisco_process_mib:
+    walk:
+      - 1.3.6.1.4.1.9.9.109.1.1.1   # cpmCPUTotalTable
+    metrics:
+      - name: cpmCPUTotal5secRev
+        oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.6
+        type: gauge
+        help: CPU busy percentage over the last 5 seconds
+        indexes:
+          - labelname: cpmCPUTotalIndex
+            type: gauge
+
+      - name: cpmCPUTotal1minRev
+        oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.7
+        type: gauge
+        help: CPU busy percentage over the last 1 minute
+        indexes:
+          - labelname: cpmCPUTotalIndex
+            type: gauge
+
+      - name: cpmCPUTotal5minRev
+        oid: 1.3.6.1.4.1.9.9.109.1.1.1.1.8
+        type: gauge
+        help: CPU busy percentage over the last 5 minutes
+        indexes:
+          - labelname: cpmCPUTotalIndex
+            type: gauge
+
+  # ---------------------------------------------------------------------------
+  # CISCO-MEMORY-POOL-MIB — memory utilization (Cisco IOS / IOS-XE / NX-OS)
+  # For Juniper use jnxOperating MIB: 1.3.6.1.4.1.2636.3.1.13
+  # ---------------------------------------------------------------------------
+  cisco_memory_pool_mib:
+    walk:
+      - 1.3.6.1.4.1.9.9.48.1.1    # ciscoMemoryPoolTable
+    metrics:
+      - name: ciscoMemoryPoolUsed
+        oid: 1.3.6.1.4.1.9.9.48.1.1.1.5
+        type: gauge
+        help: Bytes currently in use from this memory pool
+        indexes:
+          - labelname: ciscoMemoryPoolType
+            type: gauge
+        lookups:
+          - labels: [ciscoMemoryPoolType]
+            labelname: ciscoMemoryPoolName
+            oid: 1.3.6.1.4.1.9.9.48.1.1.1.2
+            type: DisplayString
+
+      - name: ciscoMemoryPoolFree
+        oid: 1.3.6.1.4.1.9.9.48.1.1.1.6
+        type: gauge
+        help: Bytes currently unused in this memory pool
+        indexes:
+          - labelname: ciscoMemoryPoolType
+            type: gauge
+        lookups:
+          - labels: [ciscoMemoryPoolType]
+            labelname: ciscoMemoryPoolName
+            oid: 1.3.6.1.4.1.9.9.48.1.1.1.2
+            type: DisplayString
+
+      - name: ciscoMemoryPoolLargestFree
+        oid: 1.3.6.1.4.1.9.9.48.1.1.1.7
+        type: gauge
+        help: Largest contiguous free block in this memory pool
+        indexes:
+          - labelname: ciscoMemoryPoolType
+            type: gauge
+        lookups:
+          - labels: [ciscoMemoryPoolType]
+            labelname: ciscoMemoryPoolName
+            oid: 1.3.6.1.4.1.9.9.48.1.1.1.2
+            type: DisplayString
