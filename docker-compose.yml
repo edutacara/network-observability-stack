@@ -82,6 +82,21 @@ services:
       peering:
         ipv4_address: 10.0.0.3
 
+  gnmic:
+    image: ghcr.io/openconfig/gnmic:0.38.2
+    container_name: gnmic
+    restart: unless-stopped
+    volumes:
+      - ./gnmic/gnmic.yml:/app/gnmic.yml:ro
+    command: subscribe --config /app/gnmic.yml
+    ports:
+      - "9804:9804"
+    networks:
+      - monitoring
+    depends_on:
+      - ceos1
+      - ceos2
+
   snmp-exporter:
     image: prom/snmp-exporter:v0.26.0
     container_name: snmp-exporter

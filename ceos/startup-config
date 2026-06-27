@@ -11,6 +11,10 @@ management api http-commands
    no protocol https
    protocol http
 !
+management api gnmi
+   transport grpc default
+   no shutdown
+!
 snmp-server chassis-id ceos1
 snmp-server contact lab@example.com
 snmp-server location Docker Lab

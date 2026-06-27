@@ -1,0 +1,51 @@
+username: admin
+password: admin
+insecure: true
+encoding: json_ietf
+log: true
+
+targets:
+  ceos1:6030:
+    name: ceos1
+  ceos2:6030:
+    name: ceos2
+
+subscriptions:
+  interfaces:
+    paths:
+      - /interfaces/interface/state
+      - /interfaces/interface/state/counters
+    mode: stream
+    stream-mode: sample
+    sample-interval: 10s
+
+  system-resources:
+    paths:
+      - /system/cpus/cpu/state
+      - /system/memory/state
+    mode: stream
+    stream-mode: sample
+    sample-interval: 30s
+
+  bgp-neighbors:
+    paths:
+      - /network-instances/network-instance/protocols/protocol/bgp/neighbors/neighbor/state
+    mode: stream
+    stream-mode: sample
+    sample-interval: 30s
+
+  platform:
+    paths:
+      - /components/component/state/serial-no
+      - /components/component/state/software-version
+    mode: stream
+    stream-mode: sample
+    sample-interval: 300s
+
+outputs:
+  prometheus-output:
+    type: prometheus
+    listen: :9804
+    path: /metrics
+    expiration: 10m
+    metric-prefix: gnmi
