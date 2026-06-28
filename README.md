@@ -12,6 +12,7 @@ BGP para simular um ambiente de rede real sem hardware físico.
 | Prometheus | http://localhost:9090 | Métricas e regras de alerta |
 | Alertmanager | http://localhost:9093 | Roteamento de alertas |
 | snmp_exporter | http://localhost:9116 | Bridge SNMP → Prometheus |
+| gnmic | http://localhost:9804/metrics | Coletor gNMI → Prometheus |
 | ceos1 SSH | `ssh admin@localhost -p 2222` | CLI Arista cEOS-lab 1 |
 | ceos2 SSH | `ssh admin@localhost -p 2223` | CLI Arista cEOS-lab 2 |
 
@@ -121,7 +122,7 @@ Coleta por push do próprio equipamento. O gNMI é habilitado automaticamente no
 
 ### iptables
 
-O agente Acl do EOS regera as regras de iptables de forma programática. Para manter INPUT/OUTPUT policy em `ACCEPT`, o `entrypoint.sh` executa um loop em background que reaplica as políticas a cada 10 s antes de chamar `/sbin/init`.
+O agente Acl do EOS regera as regras de iptables de forma programática. Para manter INPUT/OUTPUT policy em `ACCEPT`, o `entrypoint.sh` executa um loop em background que reaplica as políticas a cada 10 s. O mesmo script também habilita o gNMI automaticamente assim que o EOS aceitar comandos — sem necessidade de intervenção manual após restart.
 
 ### Configuração BGP
 
@@ -174,11 +175,13 @@ Teams, e-mail ou webhook). O arquivo contém um exemplo comentado para Slack.
 docker-compose.yml
 .env.example
 ceos/
-├── startup-config          # Config inicial do ceos1 (SNMP, SSH, BGP AS65001)
-├── startup-config-ceos2    # Config inicial do ceos2 (SNMP, SSH, BGP AS65002)
-└── entrypoint.sh           # Mantém iptables aberto + exec /sbin/init
+├── startup-config          # Config inicial do ceos1 (SNMP, SSH, gNMI, BGP AS65001)
+├── startup-config-ceos2    # Config inicial do ceos2 (SNMP, SSH, gNMI, BGP AS65002)
+└── entrypoint.sh           # Mantém iptables aberto + habilita gNMI no boot
+gnmic/
+└── gnmic.yml               # Subscriptions OpenConfig e output Prometheus (:9804)
 prometheus/
-├── prometheus.yml          # Jobs: snmp-network-devices, snmp-bgp, snmp-ospf
+├── prometheus.yml          # Jobs: snmp-network-devices, snmp-bgp, snmp-ospf, gnmi
 └── rules/
     └── network_alerts.yml  # Alertas de dispositivo, interface e utilização
 alertmanager/
@@ -186,17 +189,19 @@ alertmanager/
 grafana/
 ├── provisioning/           # Datasource + dashboard providers
 └── dashboards/
-    ├── network-interfaces.json   # Dashboard de interfaces
-    └── bgp-sessions.json         # Dashboard BGP
+    ├── network-overview.json       # Interfaces (bps, pps, erros) + BGP (state, updates)
+    ├── system-resources.json       # CPU por núcleo + memória (gNMI)
+    ├── network-interfaces.json     # Interfaces SNMP detalhado
+    └── bgp-sessions.json           # BGP SNMP: uptime, flaps, mensagens
 snmp/
 └── snmp.yml                # Módulos SNMP (if_mib, bgp4_mib, ospf_mib)
 ```
 
 ## Roadmap
 
-- gNMI/streaming telemetry (Telegraf → Prometheus) para IOS-XR / Junos
-- Dashboard de CPU/memória via vendor MIBs
+- Suporte a Cisco IOS-XE / IOS-XR e Juniper via gNMI (OpenConfig paths já compatíveis)
 - Ingestão de syslog com Loki
+- Alertas para queda de sessão BGP e alta utilização de CPU/memória
 
 ## License
 
