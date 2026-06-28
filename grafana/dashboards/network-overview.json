@@ -1,0 +1,489 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Interfaces",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count by (source) (gnmi_interfaces_interface_state_inactive == 0)",
+          "instant": true,
+          "legendFormat": "{{source}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Interfaces UP",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red",   "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "count by (source) (gnmi_interfaces_interface_state_inactive == 1)",
+          "instant": true,
+          "legendFormat": "{{source}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Interfaces DOWN",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "bps"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*out.*" },
+            "properties": [
+              { "id": "custom.transform", "value": "negative-Y" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 1 },
+      "id": 4,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_in_octets[2m]) * 8",
+          "legendFormat": "{{source}} {{interface_name}} in",
+          "refId": "in"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_out_octets[2m]) * 8",
+          "legendFormat": "{{source}} {{interface_name}} out",
+          "refId": "out"
+        }
+      ],
+      "title": "Interface Throughput (bits/s) — in ↑ out ↓",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "pps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 5 },
+      "id": 5,
+      "options": {
+        "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_in_pkts[2m])",
+          "legendFormat": "{{source}} {{interface_name}} in",
+          "refId": "in"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_out_pkts[2m])",
+          "legendFormat": "{{source}} {{interface_name}} out",
+          "refId": "out"
+        }
+      ],
+      "title": "Pacotes/s",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 7, "w": 16, "x": 8, "y": 9 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["sum", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_in_errors[2m])",
+          "legendFormat": "{{source}} {{interface_name}} in-errors",
+          "refId": "in_err"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_out_errors[2m])",
+          "legendFormat": "{{source}} {{interface_name}} out-errors",
+          "refId": "out_err"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_in_discards[2m])",
+          "legendFormat": "{{source}} {{interface_name}} in-discards",
+          "refId": "in_disc"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_interfaces_interface_state_counters_out_discards[2m])",
+          "legendFormat": "{{source}} {{interface_name}} out-discards",
+          "refId": "out_disc"
+        }
+      ],
+      "title": "Erros & Discards/s",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 10,
+      "title": "BGP",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": {
+                "1": { "color": "red",    "text": "Idle" },
+                "2": { "color": "orange", "text": "Connect" },
+                "3": { "color": "orange", "text": "Active" },
+                "4": { "color": "yellow", "text": "OpenSent" },
+                "5": { "color": "yellow", "text": "OpenConfirm" },
+                "6": { "color": "green",  "text": "Established" }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red",   "value": null },
+              { "color": "green", "value": 6 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 17 },
+      "id": 11,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "bgpPeerState",
+          "instant": true,
+          "legendFormat": "{{instance}} → {{bgpPeerRemoteAddr}}",
+          "refId": "A"
+        }
+      ],
+      "title": "BGP Session State (SNMP)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red",    "value": 5 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 17 },
+      "id": 12,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "value_and_name"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "gnmi_network_instances_network_instance_protocols_protocol_bgp_neighbors_neighbor_state_established_transitions",
+          "instant": true,
+          "legendFormat": "{{source}} → {{neighbor_neighbor_address}}",
+          "refId": "A"
+        }
+      ],
+      "title": "BGP Flaps (total)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true
+          },
+          "unit": "reqps"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*sent.*" },
+            "properties": [
+              { "id": "custom.transform", "value": "negative-Y" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 17 },
+      "id": 13,
+      "options": {
+        "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_network_instances_network_instance_protocols_protocol_bgp_neighbors_neighbor_state_messages_received_UPDATE[5m])",
+          "legendFormat": "{{source}} ← {{neighbor_neighbor_address}} received",
+          "refId": "rcv"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(gnmi_network_instances_network_instance_protocols_protocol_bgp_neighbors_neighbor_state_messages_sent_UPDATE[5m])",
+          "legendFormat": "{{source}} → {{neighbor_neighbor_address}} sent",
+          "refId": "snt"
+        }
+      ],
+      "title": "BGP Updates (msg/s) — rcv ↑  sent ↓",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "align": "auto",
+            "cellOptions": { "type": "auto" }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "State" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-text" } },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "1": { "color": "red",    "text": "Idle" },
+                      "2": { "color": "orange", "text": "Connect" },
+                      "3": { "color": "orange", "text": "Active" },
+                      "4": { "color": "yellow", "text": "OpenSent" },
+                      "5": { "color": "yellow", "text": "OpenConfirm" },
+                      "6": { "color": "green",  "text": "Established" }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 6 }
+              ] } },
+              { "id": "color", "value": { "mode": "thresholds" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Peer AS" },
+            "properties": [ { "id": "custom.width", "value": 100 } ]
+          }
+        ]
+      },
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 22 },
+      "id": 14,
+      "options": {
+        "cellHeight": "sm",
+        "footer": { "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "bgpPeerState",
+          "instant": true,
+          "legendFormat": "{{instance}}|{{bgpPeerRemoteAddr}}",
+          "refId": "state"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "bgpPeerRemoteAs",
+          "instant": true,
+          "legendFormat": "{{instance}}|{{bgpPeerRemoteAddr}}",
+          "refId": "remoteas"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "bgpPeerFsmEstablishedTime",
+          "instant": true,
+          "legendFormat": "{{instance}}|{{bgpPeerRemoteAddr}}",
+          "refId": "uptime"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "bgpPeerFsmEstablishedTransitions",
+          "instant": true,
+          "legendFormat": "{{instance}}|{{bgpPeerRemoteAddr}}",
+          "refId": "flaps"
+        }
+      ],
+      "title": "BGP Peer Table",
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns", "valueLabel": "__name__" } },
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "instance": "Router",
+              "bgpPeerRemoteAddr": "Peer IP",
+              "bgpPeerState": "State",
+              "bgpPeerRemoteAs": "Peer AS",
+              "bgpPeerFsmEstablishedTime": "Uptime (s)",
+              "bgpPeerFsmEstablishedTransitions": "Flaps"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["network", "interfaces", "bgp", "gnmi"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Network / Overview — Interfaces & BGP",
+  "uid": "network-overview",
+  "version": 1
+}
