@@ -74,16 +74,29 @@ Neighbor   AS       MsgRcvd  MsgSent  InQ  OutQ  Up/Down   State/PfxRcd
 
 ## O que está incluído
 
-### Métricas coletadas (SNMP)
+### Métricas coletadas — SNMP (poll)
 
-| Módulo | MIB | Métricas |
-|--------|-----|----------|
-| `if_mib` | IF-MIB | Tráfego, erros, discards, status operacional |
-| `bgp4_mib` | BGP4-MIB (RFC 4273) | Estado FSM dos peers, contadores de mensagens e updates |
-| `ospf_mib` | OSPF-MIB (RFC 1850) | Estado das adjacências |
+| Módulo | MIB | Intervalo | Métricas |
+|--------|-----|-----------|----------|
+| `if_mib` | IF-MIB | 60 s | Tráfego, erros, discards, status operacional |
+| `bgp4_mib` | BGP4-MIB (RFC 4273) | 60 s | Estado FSM dos peers, contadores de mensagens e updates |
+| `ospf_mib` | OSPF-MIB (RFC 1850) | 60 s | Estado das adjacências |
+
+### Métricas coletadas — gNMI (streaming, via gnmic)
+
+Coleta por push do próprio equipamento. O gNMI é habilitado automaticamente no boot do cEOS pelo `entrypoint.sh`.
+
+| Subscription | Path OpenConfig | Intervalo | Métricas |
+|---|---|---|---|
+| `interfaces` | `/interfaces/interface/state` + `counters` | **10 s** | Throughput (octets), pacotes, erros, discards, status |
+| `system-resources` | `/system/cpus/cpu/state` + `/system/memory/state` | **30 s** | CPU por núcleo (user, kernel, wait, idle), memória usada/livre/total |
+| `bgp-neighbors` | `/network-instances/.../bgp/neighbors/neighbor/state` | **30 s** | Updates enviados/recebidos, flaps, peer AS, porta |
+| `platform` | `/components/component/state/serial-no` + `software-version` | **300 s** | Serial number, versão de software |
 
 ### Dashboards Grafana
 
+- **Network / Overview — Interfaces & BGP** — throughput bps (in ↑ out ↓), pacotes/s, erros/discards, BGP state, flaps, updates rate, peer table
+- **Network / System Resources (gNMI)** — CPU utilization, CPU breakdown (user/kernel/wait/softirq), memória usada/livre/total
 - **Network / Interfaces (SNMP)** — seletor de dispositivo, interfaces down, tráfego in/out, erros e discards
 - **Network / BGP Sessions (SNMP)** — estado dos peers (mapeamento Idle→Established), session uptime, flaps, taxa de mensagens e updates
 
